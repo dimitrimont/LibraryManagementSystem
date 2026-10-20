@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="256.0" prefWidth="442.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.library.management.librarymanagementsystem.editController">
+   <Label layoutX="165.0" layoutY="14.0" text="Edit Book">
+      <font>
+         <Font size="28.0" />
+      </font>
+   </Label>
+   <Label layoutX="30.0" layoutY="77.0" text="Author" />
+   <Label layoutX="37.0" layoutY="112.0" text="Title" />
+   <Label layoutX="35.0" layoutY="153.0" text="ISBN" />
+   <Label layoutX="36.0" layoutY="189.0" text="Genre" />
+   <TextField fx:id="editAuthorTextField" layoutX="95.0" layoutY="72.0" promptText="Author " />
+   <TextField fx:id="editTitleTextField" layoutX="95.0" layoutY="107.0" promptText="Title" />
+   <TextField fx:id="editISBNTextField" layoutX="95.0" layoutY="148.0" promptText="ISBN" />
+   <TextField fx:id="editCategoryTextField" layoutX="95.0" layoutY="184.0" promptText="Genre" />
+   <Button fx:id="editSubmitButton" layoutX="359.0" layoutY="210.0" mnemonicParsing="false" onAction="#submitEdit" text="Submit" />
+   <Button fx:id="editCancelButton" layoutX="291.0" layoutY="210.0" mnemonicParsing="false" onAction="#cancelEdit" text="Cancel" />
+</Pane>

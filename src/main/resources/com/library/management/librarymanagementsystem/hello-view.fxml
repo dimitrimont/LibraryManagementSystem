@@ -7,13 +7,13 @@
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.text.Font?>
 
-<Pane prefHeight="674.0" prefWidth="796.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.library.management.librarymanagementsystem.HelloViewController">
+<Pane prefHeight="674.0" prefWidth="796.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.library.management.librarymanagementsystem.HelloViewController">
     <Label layoutX="80.0" layoutY="101.0" text="Add New Book">
         <font>
           <Font size="14.0" />
         </font>
     </Label>
-    <Label layoutX="285.0" layoutY="92.0" text="Author; Title; ISBN; Genre">
+    <Label layoutX="285.0" layoutY="92.0" text="Author, title, ISBN, genre">
         <font>
           <Font name="System Bold" size="14.0" />
         </font>
@@ -27,5 +27,8 @@
     <Button fx:id="editButton" layoutX="659.0" layoutY="88.0" mnemonicParsing="false" onAction="#handleSwitchScene" text="Edit" />
     <Button fx:id="deleteButton" layoutX="728.0" layoutY="88.0" mnemonicParsing="false" text="Delete" />
     <Button fx:id="submitButton" layoutX="97.0" layoutY="435.0" mnemonicParsing="false" text="Submit" />
+    <Label layoutX="44.0" layoutY="500.0" text="Make an account an administrator" />
+    <TextField fx:id="promoteTextField" layoutX="44.0" layoutY="522.0" promptText="Username" />
+    <Button fx:id="promoteButton" layoutX="82.0" layoutY="556.0" mnemonicParsing="false" text="Make admin" />
     <Button fx:id="logoutButton" layoutX="61.0" layoutY="627.0" mnemonicParsing="false" prefHeight="25.0" prefWidth="130.0" text="Logout" />
 </Pane>

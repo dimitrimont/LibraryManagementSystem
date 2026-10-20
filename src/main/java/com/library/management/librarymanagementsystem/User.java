@@ -1,107 +1,93 @@
 package com.library.management.librarymanagementsystem;
-import java.util.ArrayList;
+
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
+import java.util.Base64;
+import java.util.List;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 /**
  * User.java
- * 
+ *
  * Defines a User object to be used for storing user information in Library Management System.
- * 
+ * The password itself is never stored: only a random salt and a PBKDF2 hash of the password with
+ * it, so reading users.csv does not reveal anyone's password. A user's checked-out books are not
+ * kept here; each book records its borrower (see Book).
+ *
  * @author Dimitri Montgomery, Hayes Meekins, Preston Beachum, Tyler Gregory, Daniel Irwin
- * Date: 4/22/2025
+ * Date: 4/22/2025, revised October 2026
  */
 public class User {
-    
-    private String username;
-    private String password;
-    private boolean admin;
-    private ArrayList<Book> books = new ArrayList<>();
+    static final List<String> HEADER = List.of("username", "iterations", "salt", "hash", "admin");
+    /** OWASP's 2023 figure for PBKDF2 with HMAC-SHA256. */
+    static final int ITERATIONS = 600_000;
 
-    /**
-     * Constructor for User class if books is empty
-     * @param username username tied with user
-     * @param password password tied with user
-     * @param admin is permmisions for user admin
-     */
-    public User(String username, String password, boolean admin) {
+    private final String username;
+    private final int iterations;
+    private final String salt;
+    private final String hash;
+    private boolean admin;
+
+    private User(String username, int iterations, String salt, String hash, boolean admin) {
         this.username = username;
-        this.password = password;
+        this.iterations = iterations;
+        this.salt = salt;
+        this.hash = hash;
         this.admin = admin;
     }
 
     /**
-     * Constructor for User class if user has books
-     * @param username username tied with user
-     * @param password password tied with user
-     * @param admin is permmisions for user admin
-     * @param books books user has checked out
+     * A new account. The password is hashed here and then forgotten.
+     * @param username username tied with user, in lower case
+     * @param password password chosen by the user
+     * @param admin is permissions for user admin
      */
-    public User(String username, String password, boolean admin, ArrayList<Book> books) {
-        this.username = username;
-        this.password = password;
-        this.admin = admin;
-        this.books = books;
+    static User create(String username, String password, boolean admin) {
+        byte[] salt = new byte[16];
+        new SecureRandom().nextBytes(salt);
+        String s = Base64.getEncoder().encodeToString(salt);
+        return new User(username, ITERATIONS, s, hash(password, salt, ITERATIONS), admin);
+    }
 
+    /** Whether this is the user's password. */
+    boolean checkPassword(String password) {
+        String attempt = hash(password, Base64.getDecoder().decode(salt), iterations);
+        return MessageDigest.isEqual(attempt.getBytes(), hash.getBytes());
+    }
+
+    private static String hash(String password, byte[] salt, int iterations) {
+        try {
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, iterations, 256);
+            byte[] key = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
+            spec.clearPassword();
+            return Base64.getEncoder().encodeToString(key);
+        } catch (GeneralSecurityException e) {
+            throw new IllegalStateException("PBKDF2WithHmacSHA256 is missing from this Java runtime", e);
+        }
     }
 
     //Getter Methods
-    public String getUsername() {return username;}
-    public String getPassword() {return password;}
-    public boolean getAdmin() {return admin;}
-    public ArrayList<Book> getBooks() {return books;}
+    public String getUsername() { return username; }
+    public boolean getAdmin() { return admin; }
 
     //Setter Methods
-    public void setUsername(String newUsername) {this.username = newUsername;}
-    public void setPassword(String newPassword) {this.password = newPassword;}
-    public void setAdmin(boolean newAdmin) {this.admin = newAdmin;}
-    public void setBooks(ArrayList<Book> newBooks) {this.books = newBooks;}
-    
-    /**
-     * Converts a csv String to User object
-     * @param csvLine line from csv file
-     * @return User object created from csvLine
-     */
-    public static User fromCSVString(String csvLine) {
-        if (csvLine == null || csvLine.trim().isEmpty()) {
-            return null;
-        }
-        
-        csvLine = csvLine.trim();
-        String[] parts = csvLine.split(";");
-        String username = parts[0].toLowerCase();
-        String password = parts[1];
-        boolean admin = Boolean.parseBoolean(parts[2]);
-        if (parts.length > 3) {
-            ArrayList<Book> books = new ArrayList<>();
-            String[] book = parts[3].split(","); //Creates a new array containing only book elements
-            for(int i = 0; i<book.length; i+=4) { //Iterates through book elements incrementing by 4 because each book object has 4 parameters
-                books.add(new Book(book[i], book[i+1], book[i+2], book[i+3]));
-            }
-            return new User(username, password, admin, books);
-        }
-        else {
-            return new User(username, password, admin); //If user has no books a different constructor is called
-        }
+    public void setAdmin(boolean newAdmin) { this.admin = newAdmin; }
+
+    /** The user's fields, in the order of {@link #HEADER}. */
+    List<String> toRow() {
+        return List.of(username, Integer.toString(iterations), salt, hash, Boolean.toString(admin));
     }
 
-    /**
-     * Converts User object to CSV String
-     * @return csvString of User object
-     */
-    public String toCSVString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(this.username + ";" + this.password + ";" + this.admin);
-
-        if(!this.books.isEmpty()) {
-            for(int i = 0; i < this.books.size(); i++) {
-                if(i == 0) {
-                    sb.append(";" + this.books.get(i).getAuthor() + "," + this.books.get(i).getTitle() + "," + this.books.get(i).getBook_id() + "," + this.books.get(i).getGenre());
-                }
-                else {
-                    sb.append("," + this.books.get(i).getAuthor() + "," + this.books.get(i).getTitle() + "," + this.books.get(i).getBook_id() + "," + this.books.get(i).getGenre());
-                }
-            }
+    /** A user from one row of users.csv, or null if the row is not one. */
+    static User fromRow(List<String> row) {
+        if (row.size() != HEADER.size()) return null;
+        try {
+            return new User(row.get(0), Integer.parseInt(row.get(1)), row.get(2), row.get(3), Boolean.parseBoolean(row.get(4)));
+        } catch (NumberFormatException e) {
+            return null;
         }
-        String csvString = sb.toString();
-        return csvString;
     }
 }

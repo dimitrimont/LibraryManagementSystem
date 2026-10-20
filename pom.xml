@@ -37,9 +37,22 @@
             <version>21</version>
         </dependency>
         <dependency>
-            <groupId>org.controlsfx</groupId>
-            <artifactId>controlsfx</artifactId>
-            <version>11.2.1</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.11.4</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>testfx-junit5</artifactId>
+            <version>4.0.18</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testfx</groupId>
+            <artifactId>openjfx-monocle</artifactId>
+            <version>21.0.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -52,6 +65,24 @@
 
     <build>
         <plugins>
+            <!-- The tests drive the real screens without a display (Monocle, headless). -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+                <configuration>
+                    <useModulePath>false</useModulePath>
+                    <systemPropertyVariables>
+                        <testfx.robot>glass</testfx.robot>
+                        <testfx.headless>true</testfx.headless>
+                        <glass.platform>Monocle</glass.platform>
+                        <monocle.platform>Headless</monocle.platform>
+                        <headless.geometry>1600x1200-32</headless.geometry>
+                        <prism.order>sw</prism.order>
+                        <java.awt.headless>true</java.awt.headless>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
